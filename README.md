@@ -4,4 +4,4 @@ For more info visit [Advent of Code](https://adventofcode.com/) website. Below a
 
 | Day | Part 1 | Part 2 |
 |-----|--------|--------|
-|  1  |    :star:   |    :star2:   |
+|  1  | :star: | :star2:|
