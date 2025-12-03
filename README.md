@@ -5,3 +5,5 @@ For more info visit [Advent of Code](https://adventofcode.com/) website. Below i
 | Day | Part 1 | Part 2 |
 |-----|--------|--------|
 |  1  | :star: | :star2:|
+|  2  | :star: | :star2:|
+|  3  | :star: | :star2:|
