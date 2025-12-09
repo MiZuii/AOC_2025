@@ -12,3 +12,4 @@ For more info visit [Advent of Code](https://adventofcode.com/) website. Below i
 |  6  | :star: | :star2:|
 |  7  | :star: | :star2:|
 |  8  | :star: | :star2:|
+|  9  | :star: | :star2:|

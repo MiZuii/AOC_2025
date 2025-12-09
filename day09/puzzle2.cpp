@@ -13,6 +13,8 @@ struct Edge
 {
     point_t s;
     point_t e;
+    bool svalid = true;
+    bool evalid = true;
 };
 
 template<bool is_vertical, bool positive_inside>
@@ -30,28 +32,60 @@ public:
             {
                 if constexpr ( is_vertical )
                 {
-                    // this is wrong -> the code ignores corner points. however since the results is still too
-                    // low this bug doesnt affect the final solution
-                    if( !(std::max(edge.s.second, edge.e.second) <= std::min(it->s.second, it->e.second) ||
-                        std::min(edge.s.second, edge.e.second) >= std::max(it->s.second, it->e.second)))
+                    if( !(std::max(edge.s.second, edge.e.second) < std::min(it->s.second, it->e.second) ||
+                        std::min(edge.s.second, edge.e.second) > std::max(it->s.second, it->e.second)))
                     {
-                        // the edges intersect
+                        // generate possible rectangles from the blockade
                         _update_result(*it, edge);
-                        _state.erase(it);
-                        deleted = true;
-                        break;
+
+                        // update state point validities
+                        num_t miny = std::min(edge.s.second, edge.e.second);
+                        num_t maxy = std::max(edge.s.second, edge.e.second);
+                        if( it->s.second >= miny && it->s.second <= maxy )
+                        {
+                            it->svalid = false;
+                        }
+                        if( it->e.second >= miny && it->e.second <= maxy )
+                        {
+                            it->evalid = false;
+                        }
+
+                        // delete state edge if both it's points are invalid
+                        if( it->svalid == false && it->evalid == false )
+                        {
+                            _state.erase(it);
+                            deleted = true;
+                            break;
+                        }
                     }
                 }
                 else
                 {
-                    if( !(std::max(edge.s.first, edge.e.first) <= std::min(it->s.first, it->e.first) ||
-                        std::min(edge.s.first, edge.e.first) >= std::max(it->s.first, it->e.first)))
+                    if( !(std::max(edge.s.first, edge.e.first) < std::min(it->s.first, it->e.first) ||
+                        std::min(edge.s.first, edge.e.first) > std::max(it->s.first, it->e.first)))
                     {
-                        // the edges intersect
+                        // generate possible rectangles from the blockade
                         _update_result(*it, edge);
-                        _state.erase(it);
-                        deleted = true;
-                        break;
+
+                        // update state point validities
+                        num_t minx = std::min(edge.s.first, edge.e.first);
+                        num_t maxx = std::max(edge.s.first, edge.e.first);
+                        if( it->s.first >= minx && it->s.first <= maxx )
+                        {
+                            it->svalid = false;
+                        }
+                        if( it->e.first >= minx && it->e.first <= maxx )
+                        {
+                            it->evalid = false;
+                        }
+
+                        // delete state edge if both it's points are invalid
+                        if( it->svalid == false && it->evalid == false )
+                        {
+                            _state.erase(it);
+                            deleted = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -113,18 +147,44 @@ private:
     {
         if constexpr ( is_vertical )
         {
-            num_t dy = std::abs(start_edge.e.second - start_edge.s.second) + 1;
-            num_t dx = std::abs(final_edge.s.first - start_edge.s.first) + 1;
+            num_t miny = std::min(start_edge.s.second, start_edge.e.second);
+            num_t maxy = std::max(start_edge.s.second, start_edge.e.second);
+            
+            if( final_edge.s.second >= miny && final_edge.s.second <= maxy )
+            {
+                if( start_edge.svalid ) _update_res_by_point_pair_rect_size(final_edge.s, start_edge.s);
+                if( start_edge.evalid ) _update_res_by_point_pair_rect_size(final_edge.s, start_edge.e);
+            }
 
-            max_rect = std::max(max_rect, dx*dy);
+            if( final_edge.e.second >= miny && final_edge.e.second <= maxy )
+            {
+                if( start_edge.svalid ) _update_res_by_point_pair_rect_size(final_edge.e, start_edge.s);
+                if( start_edge.evalid ) _update_res_by_point_pair_rect_size(final_edge.e, start_edge.e);
+            }
         }
         else
         {
-            num_t dx = std::abs(start_edge.e.first - start_edge.s.first) + 1;
-            num_t dy = std::abs(final_edge.s.second - start_edge.s.second) + 1;
+            num_t minx = std::min(start_edge.s.first, start_edge.e.first);
+            num_t maxx = std::max(start_edge.s.first, start_edge.e.first);
+            
+            if( final_edge.s.first >= minx && final_edge.s.first <= maxx )
+            {
+                if( start_edge.svalid ) _update_res_by_point_pair_rect_size(final_edge.s, start_edge.s);
+                if( start_edge.evalid ) _update_res_by_point_pair_rect_size(final_edge.s, start_edge.e);
+            }
 
-            max_rect = std::max(max_rect, dx*dy);
+            if( final_edge.e.first >= minx && final_edge.e.first <= maxx )
+            {
+                if( start_edge.svalid ) _update_res_by_point_pair_rect_size(final_edge.e, start_edge.s);
+                if( start_edge.evalid ) _update_res_by_point_pair_rect_size(final_edge.e, start_edge.e);
+            }
         }
+    }
+
+    void _update_res_by_point_pair_rect_size(const point_t &p1, const point_t &p2)
+    {
+        const num_t size = (std::abs(p1.first - p2.first) + 1) * (std::abs(p1.second - p2.second) + 1);
+        max_rect = std::max(max_rect, size);
     }
 
     std::vector<Edge> _state;
@@ -149,7 +209,7 @@ num_t solution(std::vector<std::string> &input)
     std::vector<Edge> horizontal_edges;
     for( size_t i=1; i<points.size()+1; i++)
     {
-        if( points[i-1].first == points[i].first )
+        if( points[i-1].first == points[i % points.size()].first )
         {
             vertical_edges.push_back({points[i-1], points[i % points.size()]});
         }
