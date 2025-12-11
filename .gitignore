@@ -1,5 +1,6 @@
 *.txt
 **/bin
+*.dot
 *.out
 .vscode
 **/build
